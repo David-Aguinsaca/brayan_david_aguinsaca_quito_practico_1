@@ -28,10 +28,12 @@ async function actualizar(req, res) {
   const id = Number(req.params.id);
   const datos = req.body || {};
   if (!idValido(id)) return res.status(400).json({ mensaje: 'Id inválido' });
+
+  const existe = await Producto.buscarPorId(id);
+  if (!existe) return res.status(404).json({ mensaje: 'Producto no encontrado' });
   if (!datosValidos(datos)) return res.status(400).json({ mensaje: 'Datos inválidos' });
 
   const producto = await Producto.actualizar(id, datos);
-  if (!producto) return res.status(404).json({ mensaje: 'Producto no encontrado' });
   res.status(200).json(producto);
 }
 

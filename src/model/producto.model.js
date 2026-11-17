@@ -26,7 +26,12 @@ async function actualizar(id, { nombre, precio, stock }) {
      WHERE id = $4 RETURNING *`,
     [nombre, precio, stock || 0, id]
   );
-  return r.rows[0];                       // undefined si no existe
+  if (!r.rows[0]) {
+    const error = new Error('Producto no encontrado');
+    error.status = 404;
+    throw error;
+  }
+  return r.rows[0];
 }
 
 async function eliminar(id) {
