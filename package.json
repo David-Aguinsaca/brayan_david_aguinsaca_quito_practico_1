@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "db:init": "node scripts/init-db.js"
+    "db:init": "node scripts/init-db.js",
+    "migrate": "node scripts/migrate.js",
+    "test:pedidos": "node scripts/test-pedidos.js"
   },
   "keywords": [],
   "author": "",

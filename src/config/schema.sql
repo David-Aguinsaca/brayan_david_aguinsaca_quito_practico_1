@@ -23,3 +23,25 @@ CREATE TABLE IF NOT EXISTS productos (
     stock        INTEGER NOT NULL DEFAULT 0 CHECK (stock >= 0),
     categoria_id INTEGER UNIQUE REFERENCES categorias(id) ON DELETE SET NULL
 );
+
+-- 1. CABECERA: un pedido por compra, de UN cliente
+CREATE TABLE IF NOT EXISTS pedidos (
+    id          SERIAL PRIMARY KEY,
+    cliente_id  INTEGER NOT NULL REFERENCES clientes(id) ON DELETE CASCADE,
+    fecha       TIMESTAMP     NOT NULL DEFAULT NOW(),
+    estado      VARCHAR(20)   NOT NULL DEFAULT 'pendiente',
+    total       NUMERIC(10,2) NOT NULL DEFAULT 0
+);
+
+-- 2. DETALLE: una fila por cada producto del pedido
+CREATE TABLE IF NOT EXISTS detalle_pedido (
+    id               SERIAL PRIMARY KEY,
+    pedido_id        INTEGER NOT NULL REFERENCES pedidos(id) ON DELETE CASCADE,
+    producto_id      INTEGER NOT NULL REFERENCES productos(id),
+    cantidad         INTEGER NOT NULL CHECK (cantidad > 0),
+    precio_unitario  NUMERIC(10,2) NOT NULL,   -- el precio de ESE día
+    subtotal         NUMERIC(10,2) NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_pedidos_cliente_id ON pedidos(cliente_id);
+CREATE INDEX IF NOT EXISTS idx_detalle_pedido_pedido_id ON detalle_pedido(pedido_id);
