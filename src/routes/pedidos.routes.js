@@ -15,8 +15,6 @@ router.post('/', ctl.crear);
 router.put('/:id', ctl.actualizar);
 router.delete('/:id', ctl.eliminar);
 
-// API para calcular el total del pedido con la suma de los subtotales por pedido y cliente
-// (Se proveen alias GET, POST y PUT para flexibilidad según el cliente HTTP que lo consuma)
 router.get('/:id/total', ctl.calcularTotal);
 router.post('/:id/total', ctl.calcularTotal);
 router.get('/:id/calcular-total', ctl.calcularTotal);

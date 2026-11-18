@@ -5,7 +5,7 @@ const pool = require('../config/db');
  * Listar pedidos. Si se proporciona clienteId, lista solo los pedidos de ese cliente.
  * Si clienteId es null/undefined, lista todos los pedidos (ej. para admin).
  */
-async function listar(clienteId = null) {
+async function listarMisPedidos(clienteId = null) {
   const query = `
     SELECT 
       p.id,
@@ -76,7 +76,7 @@ async function buscarPorId(id) {
  * Crear un pedido. Si se envían items/detalles, se insertan en detalle_pedido
  * dentro de una transacción y se calcula el total automáticamente.
  */
-async function crear({ cliente_id, estado = 'pendiente', total = 0, items = [] }) {
+async function crearPedido({ cliente_id, estado = 'pendiente', total = 0, items = [] }) {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -346,9 +346,9 @@ async function eliminarDetalle(pedidoId, detalleId) {
 }
 
 module.exports = {
-  listar,
+  listar: listarMisPedidos,
   buscarPorId,
-  crear,
+  crear: crearPedido,
   actualizar,
   eliminar,
   calcularTotal,

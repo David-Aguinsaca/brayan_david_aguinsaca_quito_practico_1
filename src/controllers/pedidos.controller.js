@@ -1,5 +1,6 @@
 // src/controllers/pedidos.controller.js · controlador para pedidos y cálculo de totales
 const Pedido = require('../model/pedido.model');
+const Producto = require('../model/producto.model');
 
 const idValido = (id) => Number.isInteger(id) && id > 0;
 
@@ -44,44 +45,55 @@ async function obtener(req, res) {
 /**
  * Crear un pedido.
  * El cliente_id se asigna automáticamente desde el token JWT.
- * Opcionalmente puede recibir una lista de items/detalles.
+ * Recibe una lista obligatoria de items/detalles.
  */
 async function crear(req, res) {
   const datos = req.body || {};
+  const items = datos.items || datos.detalles;
 
-  const cliente_id =
-    req.usuario.rol === 'admin' && datos.cliente_id
-      ? Number(datos.cliente_id)
-      : req.usuario.id;
+  if (!Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({
+      mensaje: 'items debe ser un arreglo no vacío'
+    });
+  }
 
-  const items = datos.items || datos.detalles || [];
-  if (Array.isArray(items) && items.length > 0) {
-    for (const item of items) {
-      if (!item.producto_id || !idValido(Number(item.producto_id))) {
-        return res
-          .status(400)
-          .json({ mensaje: 'Cada item debe tener un producto_id válido' });
-      }
-      if (
-        !item.cantidad ||
-        !Number.isInteger(Number(item.cantidad)) ||
-        Number(item.cantidad) <= 0
-      ) {
-        return res
-          .status(400)
-          .json({ mensaje: 'Cada item debe tener una cantidad entera mayor a 0' });
-      }
+  for (const item of items) {
+    const productoId = Number(item?.producto_id);
+    const cantidad = Number(item?.cantidad);
+
+    if (!item || !idValido(productoId)) {
+      return res.status(400).json({
+        mensaje: 'Cada item debe tener un producto_id mayor a 0'
+      });
+    }
+
+    if (!Number.isInteger(cantidad) || cantidad <= 0) {
+      return res.status(400).json({
+        mensaje: 'Cada item debe tener una cantidad mayor a 0'
+      });
+    }
+
+    const producto = await Producto.buscarPorId(productoId);
+    if (!producto) {
+      return res.status(400).json({
+        mensaje: `El producto con id ${productoId} no existe`
+      });
     }
   }
 
+  const itemsNormalizados = items.map((item) => ({
+    producto_id: Number(item.producto_id),
+    cantidad: Number(item.cantidad)
+  }));
+
   const nuevoPedido = await Pedido.crear({
-    cliente_id,
+    cliente_id: req.usuario.id,
     estado: datos.estado || 'pendiente',
-    total: datos.total || 0,
-    items
+    items: itemsNormalizados
   });
 
-  res.status(201).json(nuevoPedido);
+  const pedidoConDetalle = await Pedido.buscarPorId(nuevoPedido.id);
+  res.status(201).json(pedidoConDetalle);
 }
 
 /**
